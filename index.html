@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Canada fire map</title>
+  <meta name="description" content="Research map of wildfires, a research model's fire forecasts and the Fire Weather Index in Canada. Not an official forecast.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+        integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+          integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Canada fire map</h1>
+    <div class="note" id="header-note"><b>Research model - not an official wildfire forecast.</b> Official information:
+      <a href="https://cwfis.cfs.nrcan.gc.ca" rel="noopener" target="_blank">CWFIS</a>,
+      <a href="https://ciffc.ca" rel="noopener" target="_blank">CIFFC</a>, your provincial or territorial wildfire
+      agency.</div>
+    <div class="actions">
+      <button type="button" id="about-open">About this map</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="controls" id="controls" aria-label="Map controls">
+      <button type="button" class="drawer-toggle" id="drawer-toggle" aria-expanded="false" aria-controls="controls">
+        <span id="drawer-summary">Date and layers</span><span aria-hidden="true">Show</span>
+      </button>
+
+      <section>
+        <h2>Season</h2>
+        <div class="row"><select id="season" aria-label="Season"></select></div>
+        <div class="muted" id="season-note"></div>
+        <div class="hint" id="season-caveat" hidden></div>
+      </section>
+
+      <section>
+        <h2>Day</h2>
+        <div class="date-big" id="date-label">—</div>
+        <div class="muted" id="forecast-label"></div>
+        <div class="slider-wrap">
+          <input type="range" id="day" min="0" max="0" value="0" aria-label="Day of the season">
+          <div class="ticks" id="ticks" aria-hidden="true"></div>
+        </div>
+        <div class="timebuttons">
+          <button type="button" id="prev" aria-label="Previous day">&lsaquo; Day</button>
+          <button type="button" id="play" aria-label="Play through the season">Play</button>
+          <button type="button" id="next" aria-label="Next day">Day &rsaquo;</button>
+          <button type="button" id="prev-monday" aria-label="Previous forecast Monday">&lsaquo; Mon</button>
+          <button type="button" id="next-monday" aria-label="Next forecast Monday">Mon &rsaquo;</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Fires</h2>
+        <div class="row"><label><input type="checkbox" id="layer-fires" checked> Reported fires</label></div>
+        <div class="row sub">
+          <select id="fire-window" aria-label="Which fires">
+            <option value="day">reported this day</option>
+            <option value="7d" selected>reported in the last 7 days</option>
+            <option value="window">in the forecast's 30-day window</option>
+            <option value="season">season to date</option>
+          </select>
+        </div>
+        <div class="row sub"><span class="muted">Colour by</span>
+          <select id="fire-colour" aria-label="Colour fires by">
+            <option value="outcome">caught by a marked zone or not</option>
+            <option value="cause">cause</option>
+          </select>
+        </div>
+      </section>
+
+      <section>
+        <h2>Forecast</h2>
+        <div class="row"><label><input type="checkbox" id="layer-zones" checked> Marked zones (the model's 200 a week)</label></div>
+        <div id="gate-note" class="warning" hidden></div>
+      </section>
+
+      <section>
+        <h2>Shading</h2>
+        <div class="row"><label><input type="radio" name="shade" value="none" checked> None</label></div>
+        <div class="row"><label><input type="radio" name="shade" value="cwfis"> Fire Weather Index, official map (2 km)</label></div>
+        <div class="row"><label><input type="radio" name="shade" value="model"> Fire Weather Index, model's 10 km grid</label></div>
+        <div class="row sub">
+          <select id="model-period" aria-label="Model FWI period">
+            <option value="day">that day</option>
+            <option value="mean7">mean of the last 7 days</option>
+            <option value="max7">highest of the last 7 days</option>
+          </select>
+        </div>
+        <div class="row"><label><input type="radio" name="shade" value="chance" id="shade-chance"> Chance of a fire in the next 30 days</label></div>
+      </section>
+
+      <section>
+        <h2>Legend</h2>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <section>
+        <p class="hint" id="bundle-note"></p>
+      </section>
+    </aside>
+
+    <div class="map-wrap">
+      <div id="map" role="application" aria-label="Map of Canada. Click a fire or a place for details."></div>
+      <div class="status" id="status" role="status" hidden></div>
+      <div class="panel" id="panel" hidden role="dialog" aria-labelledby="panel-title">
+        <div class="head"><h3 id="panel-title">Details</h3><button type="button" id="panel-close" aria-label="Close details">Close</button></div>
+        <div class="body" id="panel-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<dialog class="about" id="about" aria-labelledby="about-title">
+  <div class="head"><h2 id="about-title">About this map</h2><button type="button" id="about-close">Close</button></div>
+  <div class="content" id="about-content">
+    <h3>What this map shows</h3>
+    <p>Wildfires reported in Canada, a research model's weekly fire forecasts, the daily Fire Weather Index (FWI), and
+      the conditions behind each fire and forecast, 1 April to 31 October.</p>
+
+    <h3>How to use it</h3>
+    <ul>
+      <li>Pick a season and a day (slider, Day, Play; Mon jumps between forecast Mondays), then which fires to show
+        and how to colour them.</li>
+      <li>Shading: the official FWI map, the model's 10 km FWI grid, or the model's chance of a fire.</li>
+      <li>Click a fire, a marked zone or any place for details. The web address keeps your view for sharing.</li>
+    </ul>
+
+    <h3>The model in brief</h3>
+    <p>Every Monday the model estimates, for each 10 km square, the chance that at least one fire of 1 hectare or
+      more will be reported within 28 km in the next 30 days. It averages a decision-tree model and two neural
+      networks. Its two neural networks learned from fire records and weather since 1980, its decision tree since 2015,
+      using station weather and fire weather codes, recent fires nearby, the place's fire history, fuel type and
+      climate indices. Each Monday it marks the 200 zones with the highest chances, with marked centres at least 56 km
+      apart.</p>
+
+    <h3>How it did</h3>
+    <p id="about-results"></p>
+
+    <h3>Words used here</h3>
+    <dl>
+      <dt>Hectare (ha)</dt><dd>An area of 100 m by 100 m (0.01 km²).</dd>
+      <dt>Cell</dt><dd>A 10 km by 10 km square of the model's grid. 70,057 cells cover the official FWI map's area: most
+        of Canada, but only a small part of Nunavut.</dd>
+      <dt>Zone</dt><dd>The circle of 28 km radius around a cell's centre. Zones of neighbouring cells overlap.</dd>
+      <dt>Forecast Monday</dt><dd>The day of the model's weekly forecast.</dd>
+      <dt>Counted fire</dt><dd>A fire of at least 1 ha recorded by a fire agency; the model learns from and is scored on
+        these.</dd>
+      <dt>Chance</dt><dd>The model's probability that at least one counted fire is reported in the zone in the 30 days
+        after the forecast Monday.</dd>
+      <dt>Rank</dt><dd>The zone's place in that Monday's list, highest chance first.</dd>
+      <dt>Marked zone</dt><dd>One of the 200 zones the model picks each Monday, highest chance first, with centres at
+        least 56 km apart, so marked zones never overlap: the map's "predicted fires".</dd>
+      <dt>Caught fire</dt><dd>A counted fire inside a zone marked on a Monday 1 to 30 days before its report date.</dd>
+      <dt>Normal</dt><dd>A cell's 1980-2022 average for the same time of the season.</dd>
+      <dt>FFMC</dt><dd>"Fine Fuel Moisture Code (FFMC) is affected by temperature, rain, relative humidity and wind.
+        FFMC represents moisture in small, easily ignitable fuels"</dd>
+      <dt>DMC</dt><dd>"Duff Moisture Code (DMC) is influenced by temperature, rain, and relative humidity. DMC tracks
+        moisture levels in decomposing organic matter."</dd>
+      <dt>DC</dt><dd>"Drought Code (DC) is affected by temperature and rain. DC measures long-term drying
+        conditions."</dd>
+      <dt>ISI</dt><dd>"FFMC and wind influence the Initial Spread Index (ISI), which estimates how quickly a fire will
+        spread."</dd>
+      <dt>BUI</dt><dd>"DC and DMC combine to form the Buildup Index (BUI), which indicates the amount of fuel available
+        for a wildland fire to burn."</dd>
+      <dt>FWI</dt><dd>"ISI and BUI determine the Fire Weather Index (FWI), which provides an overall measure of fire
+        danger."</dd>
+    </dl>
+    <p class="muted">Quotations: Natural Resources Canada, "Canadian Forest Fire Weather Index (FWI) System". Higher
+      values mean drier fuels and more danger; colours show the five official classes.</p>
+
+    <h3>Limits</h3>
+    <ul>
+      <li>Fires under 1 ha are drawn but not counted.</li>
+      <li>Weather is estimated for each cell from nearby stations; far from a station it is less certain.</li>
+    </ul>
+
+    <h3>Notes for <span id="about-season-name"></span></h3>
+    <ul id="about-notes"></ul>
+
+    <h3>Sources and credits</h3>
+    <div id="about-credits">
+      <p><b>Data sources.</b> Contains information licensed under the Open Government Licence - Canada
+        (<a href="https://open.canada.ca/en/open-government-licence-canada" rel="noopener" target="_blank">https://open.canada.ca/en/open-government-licence-canada</a>).</p>
+      <ul>
+        <li>Fire Weather Index maps and weather-station fire weather: Canadian Forest Service. Canadian Wildland Fire
+          Information System (CWFIS), Natural Resources Canada, Canadian Forest Service, Northern Forestry Centre,
+          Edmonton, Alberta. <a href="https://cwfis.cfs.nrcan.gc.ca" rel="noopener" target="_blank">https://cwfis.cfs.nrcan.gc.ca</a></li>
+        <li>Fires 2025 and the fire history the model learns from: Canadian Forest Service. Canadian National Fire
+          Database - Agency Fire Data. Natural Resources Canada, Canadian Forest Service, Northern Forestry Centre,
+          Edmonton, Alberta. <a href="http://cwfis.cfs.nrcan.gc.ca/en_CA/nfdb" rel="noopener" target="_blank">http://cwfis.cfs.nrcan.gc.ca/en_CA/nfdb</a>.
+          The publisher notes that these records are not complete and not free of error, and that
+          their quality varies between agencies and years.</li>
+        <li>Fires 2026: Agency Reported Wildfires in Canada (CWFIS), Natural Resources Canada; reported daily by the
+          provincial, territorial and Parks Canada fire agencies through the national Data Integration Project
+          coordinated by the Canadian Interagency Forest Fire Centre (CIFFC) and Natural Resources Canada.</li>
+        <li>Fuel types: Canadian Forest Fire Danger Rating System (CFFDRS) Fire Behaviour Prediction (FBP) Fuel Types
+          2024, 30 m, Natural Resources Canada, Canadian Forest Service.</li>
+        <li>Ecozones: Agriculture and Agri-Food Canada (CanSIS), National Ecological Framework for Canada.</li>
+        <li>Climate indices used by the model: CanDCS-M6, yearly indices from the ensemble mean of 26 CMIP6 climate
+          models under the SSP5-8.5 scenario; Canadian Centre for Climate Services, Environment and Climate Change
+          Canada; ClimateData.ca. Sobie, S. R., Ouali, D., Curry, C. L. and Zwiers, F. W. (2024). Multivariate Canadian
+          Downscaled Climate Scenarios for CMIP6 (CanDCS-M6). Geoscience Data Journal 11: 806-824.
+          <a href="https://doi.org/10.1002/gdj3.257" rel="noopener" target="_blank">https://doi.org/10.1002/gdj3.257</a>.
+          We wish to thank ClimateData.ca for
+          providing the climate information used on this map. ClimateData.ca was created through a collaboration
+          between the Pacific Climate Impacts Consortium (PCIC), Ouranos Inc., the Prairie Climate Centre (PCC),
+          Environment and Climate Change Canada (ECCC) and Luqia. We acknowledge the World Climate Research Programme,
+          which, through its Working Group on Coupled Modelling, coordinated and promoted CMIP6. We thank the climate
+          modeling groups for producing and making available their model output, the Earth System Grid Federation
+          (ESGF) for archiving the data and providing access, and the multiple funding agencies who support CMIP6 and
+          ESGF. The 26 models: ACCESS-CM2, ACCESS-ESM1-5, BCC-CSM2-MR, CanESM5, CMCC-ESM2, CNRM-CM6-1, CNRM-ESM2-1,
+          EC-Earth3, EC-Earth3-Veg, FGOALS-g3, GFDL-ESM4, HadGEM3-GC31-LL, INM-CM4-8, INM-CM5-0, IPSL-CM6A-LR,
+          KACE-1-0-G, KIOST-ESM, MIROC6, MIROC-ES2L, MPI-ESM1-2-HR, MPI-ESM1-2-LR, MRI-ESM2-0, NorESM2-LM, NorESM2-MM,
+          TaiESM1, UKESM1-0-LL (institutions: Table 2 of
+          <a href="https://climate-scenarios.canada.ca/?page=CanDCS6-notes" rel="noopener" target="_blank">https://climate-scenarios.canada.ca/?page=CanDCS6-notes</a>).</li>
+        <li>Boundaries: Adapted from Statistics Canada, 2021 Census cartographic boundary files, provinces and
+          territories, 2021. This does not constitute an endorsement by Statistics Canada of this product.</li>
+        <li>Coastlines, lakes and places: Made with Natural Earth.</li>
+        <li>Definitions of the six fire weather codes: Natural Resources Canada, "Canadian Forest Fire Weather Index
+          (FWI) System".</li>
+        <li>Map display: Leaflet.</li>
+      </ul>
+    </div>
+
+    <h3>Official information</h3>
+    <p><b>Research map, not an official forecast.</b> The fire chances and marked areas on this map come from a
+      statistical model built for research. They are hindcasts: made after the season from information dated up to each
+      Monday, to show how such a model would have done. They can be wrong, and they are not a warning. Do not use this
+      map for safety, evacuation or planning decisions.</p>
+    <p>For official and current information, see the Canadian Wildland Fire Information System
+      (<a href="https://cwfis.cfs.nrcan.gc.ca" rel="noopener" target="_blank">https://cwfis.cfs.nrcan.gc.ca</a>), the
+      Canadian Interagency Forest Fire Centre (<a href="https://ciffc.ca" rel="noopener" target="_blank">https://ciffc.ca</a>)
+      and your provincial or territorial wildfire agency. In an emergency, follow the instructions of local
+      authorities.</p>
+    <p>This map is not produced, checked or endorsed by Natural Resources Canada, Statistics Canada, the Canadian
+      Interagency Forest Fire Centre, Agriculture and Agri-Food Canada or any fire management agency. Fire records are
+      as reported by the agencies: positions are reported points (not burned areas), dates are report dates (not start
+      dates), and records can be incomplete or revised.</p>
+    <p class="muted" id="about-build"></p>
+  </div>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

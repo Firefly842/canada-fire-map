@@ -1,0 +1,208 @@
+/* Canada fire map: layout, light and dark tokens, the controls, the info panel and the About dialog. */
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb;
+  --surface-2: #f3f2ef;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --text-3: #75746f;
+  --border: #d9d8d4;
+  --accent: #2a78d6;
+  --water: #dce8f1;
+  --land: #f4f2ec;
+  --land-line: #8a8985;
+  --neighbour: #e7e5df;
+  --zone: #141413;
+  --zone-halo: #ffffff;
+  --select: #000000;
+  --select-halo: #ffffff;
+  --chip-text: #0b0b0b;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --text-3: #9a998f;
+    --border: #3a3a37;
+    --accent: #3987e5;
+    --water: #17222b;
+    --land: #2a2a27;
+    --land-line: #8d8c85;
+    --neighbour: #20201e;
+    --zone: #f0efec;
+    --zone-halo: #111110;
+    --select: #ffffff;
+    --select-halo: #000000;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --text: #f0efec;
+  --text-2: #c3c2b7;
+  --text-3: #9a998f;
+  --border: #3a3a37;
+  --accent: #3987e5;
+  --water: #17222b;
+  --land: #2a2a27;
+  --land-line: #8d8c85;
+  --neighbour: #20201e;
+  --zone: #f0efec;
+  --zone-halo: #111110;
+  --select: #ffffff;
+  --select-halo: #000000;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--surface); color: var(--text); font-size: 14px; line-height: 1.4; overflow: hidden; }
+a { color: var(--accent); }
+button, select, input { font: inherit; color: inherit; }
+button {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+  cursor: pointer; min-height: 32px;
+}
+button:hover { border-color: var(--text-3); }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+select { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; min-height: 30px; }
+
+.app { display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); height: 100%; max-width: 100vw; }
+header.top {
+  display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-bottom: 1px solid var(--border);
+  background: var(--surface); z-index: 1000;
+}
+header.top h1 { font-size: 16px; margin: 0; font-weight: 650; white-space: nowrap; }
+header.top .note { color: var(--text-2); font-size: 12.5px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+header.top .note b { color: var(--text); font-weight: 600; }
+header.top .actions { display: flex; gap: 6px; }
+
+.main { display: grid; grid-template-columns: 330px minmax(0, 1fr); min-height: 0; min-width: 0; }
+.timebuttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-top: 4px; }
+.timebuttons button { padding: 4px 2px; white-space: nowrap; }
+.controls {
+  overflow-y: auto; border-right: 1px solid var(--border); padding: 12px 14px 20px; background: var(--surface);
+}
+.controls section { margin-bottom: 16px; }
+.controls h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); margin: 0 0 6px; font-weight: 650; }
+.row { display: flex; align-items: center; gap: 8px; margin: 4px 0; flex-wrap: wrap; }
+.row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.sub { margin-left: 24px; }
+.muted { color: var(--text-2); font-size: 12.5px; }
+.hint { color: var(--text-3); font-size: 12px; }
+.warning { color: var(--text); background: var(--surface-2); border-left: 3px solid #ec835a; padding: 6px 8px; border-radius: 4px; font-size: 12.5px; }
+
+/* time control */
+.date-big { font-size: 18px; font-weight: 650; }
+.slider-wrap { position: relative; padding-bottom: 14px; }
+.slider-wrap input[type="range"] { width: 100%; margin: 6px 0 0; }
+.ticks { position: absolute; left: 8px; right: 8px; bottom: 0; height: 12px; pointer-events: none; }
+.ticks span { position: absolute; width: 1px; height: 7px; background: var(--text-3); transform: translateX(-0.5px); }
+.ticks .window { position: absolute; height: 4px; bottom: 8px; background: var(--accent); opacity: 0.45; border-radius: 2px; }
+.ticks .active { background: var(--text); height: 10px; width: 2px; }
+
+/* legend */
+.legend { display: grid; gap: 3px; }
+.legend .item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.legend .credit { font-size: 11px; color: var(--text-2); margin: 2px 0 6px; line-height: 1.35; }
+.swatch { width: 18px; height: 12px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.15); flex: none; }
+.dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border); flex: none; }
+.ring { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--zone); box-shadow: 0 0 0 2px var(--zone-halo); flex: none; }
+.chip { display: inline-block; min-width: 10px; height: 10px; border-radius: 2px; vertical-align: baseline; margin-right: 4px; border: 1px solid rgba(0, 0, 0, 0.2); }
+
+/* map */
+.map-wrap { position: relative; min-height: 0; }
+#map { position: absolute; inset: 0; background: var(--water); }
+.leaflet-container { background: var(--water); font: inherit; }
+.leaflet-image-layer.pixelated { image-rendering: pixelated; image-rendering: crisp-edges; }
+.status {
+  position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 900; background: var(--surface);
+  color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12.5px;
+  box-shadow: var(--shadow); max-width: min(560px, calc(100% - 32px)); text-align: center;
+}
+.status[hidden] { display: none; }
+/* town labels: placed by app.js updateTownLabels (translate), shown only where they do not collide */
+.town-anchor { background: none; border: none; }
+.town-label { position: absolute; left: 0; top: 0; white-space: nowrap; visibility: hidden; color: var(--text-2);
+  font-size: 11px; line-height: 13px; font-weight: 500;
+  text-shadow: 0 0 2px var(--surface), 0 0 2px var(--surface), 0 0 3px var(--surface); }
+.town-label.shown { visibility: visible; }
+.leaflet-control-scale-line { background: var(--surface); color: var(--text); border-color: var(--text-2); }
+.leaflet-bar a, .leaflet-bar a:hover { background: var(--surface); color: var(--text); border-bottom-color: var(--border); }
+.leaflet-container .leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 85%, transparent);
+  color: var(--text-2); font-size: 11px; }
+.leaflet-container .leaflet-control-attribution a { color: var(--accent); }
+
+/* the active shading's legend on the map */
+.map-legend { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+  padding: 5px 8px 4px; box-shadow: var(--shadow); width: 290px; max-width: calc(100vw - 32px); }
+.map-legend[hidden] { display: none; }
+.map-legend .title { font-size: 11.5px; line-height: 1.3; margin-bottom: 3px; }
+.map-legend .steps { display: flex; gap: 2px; }
+.map-legend .step { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
+.map-legend .bar { height: 10px; border-radius: 2px; border: 1px solid rgba(0, 0, 0, 0.15); }
+.map-legend .name { font-size: 10.5px; color: var(--text-2); text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* info panel */
+.panel {
+  position: absolute; top: 10px; right: 10px; bottom: 10px; width: 360px; z-index: 950; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); display: flex; flex-direction: column;
+}
+.panel[hidden] { display: none; }
+.panel .head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.panel .head h3 { margin: 0; font-size: 15px; flex: 1; }
+.panel .body { overflow-y: auto; padding: 10px 12px 16px; }
+.panel h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); margin: 14px 0 4px; }
+.panel table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.panel td, .panel th { padding: 3px 4px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.panel td.num, .panel th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.panel table.cond td:first-child { width: 58%; }
+.panel td.val { text-align: right; }
+.panel tr.active td { font-weight: 650; }
+.panel .subtitle { margin: 0 0 8px; color: var(--text-2); }
+.panel p.lead { margin: 4px 0 8px; }
+.panel .kv { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 3px 10px; font-size: 13px; }
+.panel .kv dt { color: var(--text-2); }
+.panel .kv dd { margin: 0; }
+.badge { display: inline-block; padding: 1px 6px; border-radius: 10px; font-size: 12px; border: 1px solid var(--border); background: var(--surface-2); }
+
+/* About dialog */
+dialog.about {
+  width: min(760px, calc(100% - 24px)); max-height: calc(100% - 40px); border: 1px solid var(--border); border-radius: 10px;
+  padding: 0; background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+}
+dialog.about::backdrop { background: rgba(0, 0, 0, 0.45); }
+dialog.about .head { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
+dialog.about .head h2 { margin: 0; font-size: 17px; flex: 1; }
+dialog.about .content { padding: 4px 18px 18px; overflow-y: auto; }
+dialog.about h3 { font-size: 14px; margin: 16px 0 4px; }
+dialog.about dl dt { font-weight: 600; margin-top: 6px; }
+dialog.about dl dd { margin: 0 0 4px 0; color: var(--text-2); }
+
+/* phone width: controls become a drawer, the panel a bottom sheet */
+.drawer-toggle { display: none; }
+@media (max-width: 760px) {
+  header.top { flex-wrap: wrap; gap: 4px 10px; padding: 6px 12px; }
+  header.top h1 { font-size: 14.5px; }
+  header.top .note { order: 3; flex-basis: 100%; font-size: 11.5px; }
+  .main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .controls {
+    position: absolute; left: 0; right: 0; bottom: 0; max-height: 62%; z-index: 960; border-right: none;
+    border-top: 1px solid var(--border); border-radius: 12px 12px 0 0; box-shadow: var(--shadow);
+    transform: translateY(calc(100% - 46px)); transition: transform 0.2s ease;
+  }
+  .controls.open { transform: none; }
+  .drawer-toggle { display: flex; width: 100%; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .main { position: relative; }
+  .panel { left: 8px; right: 8px; top: auto; width: auto; bottom: 70px; max-height: 58%; z-index: 1001; }   /* above the attribution line */
+  .leaflet-bottom { bottom: 48px; }
+  .leaflet-bottom.leaflet-left { bottom: 68px; }      /* legend and scale above the one-line attribution */
+}
+@media (prefers-reduced-motion: reduce) { .controls { transition: none; } }

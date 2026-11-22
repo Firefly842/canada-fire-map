@@ -1,0 +1,127 @@
+{
+ "class_colours": [
+  "#2C7BB6",
+  "#FFFF97",
+  "#FFD063",
+  "#E38D01",
+  "#C7191C"
+ ],
+ "codes": {
+  "bui": {
+   "label": "Buildup Index",
+   "ranges": [
+    "0-20",
+    "21-40",
+    "41-60",
+    "61-90",
+    "91+"
+   ],
+   "upper_bounds": [
+    20.5,
+    40.5,
+    60.5,
+    90.5
+   ]
+  },
+  "dc": {
+   "label": "Drought Code",
+   "ranges": [
+    "0-70",
+    "71-190",
+    "191-300",
+    "301-500",
+    "501+"
+   ],
+   "upper_bounds": [
+    70.5,
+    190.5,
+    300.5,
+    500.5
+   ]
+  },
+  "dmc": {
+   "label": "Duff Moisture Code",
+   "ranges": [
+    "0-10",
+    "11-25",
+    "26-45",
+    "46-60",
+    "61+"
+   ],
+   "upper_bounds": [
+    10.5,
+    25.5,
+    45.5,
+    60.5
+   ]
+  },
+  "ffmc": {
+   "label": "Fine Fuel Moisture Code",
+   "ranges": [
+    "0-75",
+    "76-84",
+    "85-89",
+    "90-92",
+    "93+"
+   ],
+   "upper_bounds": [
+    75.5,
+    84.5,
+    89.5,
+    92.5
+   ]
+  },
+  "fwi": {
+   "label": "Fire Weather Index",
+   "ranges": [
+    "0-5",
+    "6-15",
+    "16-22",
+    "23-29",
+    "30+"
+   ],
+   "upper_bounds": [
+    5.5,
+    15.5,
+    22.5,
+    29.5
+   ]
+  },
+  "isi": {
+   "label": "Initial Spread Index",
+   "ranges": [
+    "0-2",
+    "3-5",
+    "6-10",
+    "11-15",
+    "16+"
+   ],
+   "upper_bounds": [
+    2.5,
+    5.5,
+    10.5,
+    15.5
+   ]
+  }
+ },
+ "fuel": {
+  "-1": "No fuel data",
+  "1": "C-1 Spruce-lichen woodland",
+  "101": "Non-fuel",
+  "102": "Water",
+  "105": "Vegetated non-fuel",
+  "11": "D-1 Leafless aspen",
+  "13": "D-1/D-2 Aspen",
+  "2": "C-2 Boreal spruce",
+  "3": "C-3 Mature jack or lodgepole pine",
+  "31": "O-1a Matted grass",
+  "4": "C-4 Immature jack or lodgepole pine",
+  "415": "M-1 Boreal mixedwood, leafless (15% conifer)",
+  "5": "C-5 Red and white pine",
+  "625": "M-1/M-2 Boreal mixedwood, green (25% conifer)",
+  "650": "M-1/M-2 Boreal mixedwood, green (50% conifer)",
+  "675": "M-1/M-2 Boreal mixedwood, green (75% conifer)",
+  "7": "C-7 Ponderosa pine / Douglas-fir"
+ },
+ "source": "Fire Weather Index System classes and colours: Canadian Wildland Fire Information System (CWFIS), Natural Resources Canada. Fuel types: CFFDRS Fire Behaviour Prediction (FBP) Fuel Types 2024, Natural Resources Canada, Canadian Forest Service."
+}
